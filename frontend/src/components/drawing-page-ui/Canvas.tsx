@@ -1,8 +1,15 @@
 import { useEffect, useRef, useState } from "react"
+import { Button } from "../ui/button";
+import { ChromePicker } from 'react-color'
+import { io } from 'socket.io-client'
+
+const socket = io('http://localhost:3000');
 
 type DrawLine = {
     ctx: CanvasRenderingContext2D,
-    currPoint: Point
+    prevPoint: Point | null,
+    currPoint: Point,
+    color: string
 };
 
 type Point = {
@@ -13,7 +20,21 @@ type Point = {
 export default function Canvas() {
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const prevPoint = useRef<Point | null>(null);
+    const [color, setColor] = useState("#000");
     const [isDrawing, setIsDrawing] = useState(false);
+
+    useEffect(() => {
+        const context = canvasRef.current?.getContext('2d');
+        socket.on("get-draw-line", (data: DrawLine & string) => {
+            if (!context) return;
+            drawLine({ ctx: context, prevPoint: data.prevPoint, currPoint: data.currPoint, color: data.color })
+
+            // return () => {
+            //     socket.off("get-draw-line");
+            // };
+        })
+    }, [])
 
     useEffect(() => {
         const mouseMoveHandler = (e: MouseEvent) => {
@@ -21,7 +42,8 @@ export default function Canvas() {
             const context = canvasRef.current?.getContext('2d');
             const currPoint = calculateMouseInCanvas(e);
             if (!currPoint || !context) return;
-            drawLine({ ctx: context, currPoint });
+            paintCanvas({ ctx: context, prevPoint: prevPoint.current, currPoint, color: color });
+            prevPoint.current = currPoint;
         }
 
         const calculateMouseInCanvas = (e: MouseEvent) => {
@@ -35,7 +57,7 @@ export default function Canvas() {
 
         const handleMouseUp = () => {
             setIsDrawing(false);
-            canvasRef.current?.getContext('2d')?.beginPath();
+            prevPoint.current = null;
         }
 
         // add event listener
@@ -45,34 +67,67 @@ export default function Canvas() {
         // remove event listener
         return () => {
             canvasRef.current?.removeEventListener('mousemove', mouseMoveHandler);
-            window.addEventListener('mouseup', handleMouseUp);
+            window.removeEventListener('mouseup', handleMouseUp);
         }
 
     }, [isDrawing]);
 
-    const drawLine = ({ ctx, currPoint }: DrawLine) => {
+    const clearCanvas = () => {
+        if (!canvasRef) return;
+        const context = canvasRef.current?.getContext('2d');
+        if (!context) return;
+        context.clearRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
+    }
+
+    const paintCanvas = ({ ctx, prevPoint, currPoint }: DrawLine) => {
+        socket.emit("draw-line", {
+            prevPoint: prevPoint,
+            currPoint,
+            color
+        })
+        drawLine({ ctx, prevPoint, currPoint, color })
+    }
+
+    const drawLine = ({ ctx, prevPoint, currPoint  , color}: DrawLine) => {
+
         const { x: currX, y: currY } = currPoint;
-        const lineColor = "#000";
+        const lineColor = color;
         const lineWidth = 5;
 
+        const start = prevPoint ?? currPoint;
+
+        ctx.beginPath()
         ctx.lineWidth = lineWidth;
         ctx.strokeStyle = lineColor;
         ctx.lineCap = "round"
 
+
+        ctx.moveTo(start.x, start.y);
         ctx.lineTo(currX, currY);
         ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(currX, currY);
     }
 
     return (
-        <canvas
-            ref={canvasRef}
-            width={850}
-            height={850}
-            onMouseDown={() => setIsDrawing(true)}
-            className="border border-black rounded-xl"
-        />
+        <div className="w-full h-full flex items-center gap-x-5 justify-center">
+            <div className="flex flex-col items-center gap-y-2">
+                <ChromePicker
+                    color={color}
+                    onChange={(e) => setColor(e.hex)}
+                />
+                <Button
+                    onClick={clearCanvas}
+                    variant={'destructive'}
+                >
+                    Clear Canvas
+                </Button>
+            </div>
+            <canvas
+                ref={canvasRef}
+                width={850}
+                height={850}
+                onMouseDown={() => setIsDrawing(true)}
+                className="border border-black rounded-xl"
+            />
+        </div>
     )
 }
