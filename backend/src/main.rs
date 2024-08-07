@@ -16,6 +16,24 @@ use tracing_subscriber::FmtSubscriber;
 async fn on_connect(socket: SocketRef) {
     println!("socket connected : {}", socket.id);
 
+    socket.on(
+        "client-connect",
+        |socket: SocketRef, Data::<Option<String>>(data)| {
+            let _ = socket.broadcast().emit("get-client-state", data);
+        },
+    );
+
+    socket.on("client-state", |socket: SocketRef, Data::<String>(data)| {
+        let _ = socket.broadcast().emit("server-state", data);
+    });
+
+    socket.on(
+        "clear-canvas",
+        |socket: SocketRef, Data::<Option<String>>(data)| {
+            let _ = socket.broadcast().emit("clear-canvas", data);
+        },
+    );
+
     socket.on("draw-line", |socket: SocketRef, Data::<DrawLine>(data)| {
         let _ = socket.broadcast().emit("get-draw-line", data);
     })

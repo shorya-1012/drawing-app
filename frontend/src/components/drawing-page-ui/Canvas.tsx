@@ -26,13 +26,30 @@ export default function Canvas() {
 
     useEffect(() => {
         const context = canvasRef.current?.getContext('2d');
+
+        socket.emit("client-connect", null);
+
+        socket.on("get-client-state", (data) => {
+            const client_state = canvasRef.current?.toDataURL();
+            if (!client_state) return
+            socket.emit("client-state", client_state);
+        })
+
+        socket.on("server-state", (data) => {
+            let img = new Image();
+            img.src = data;
+            img.onload = () => {
+                context?.drawImage(img, 0, 0);
+            }
+        })
+
+        socket.on("clear-canvas" , ()=>{
+            clearCanvas();
+        })
+
         socket.on("get-draw-line", (data: DrawLine & string) => {
             if (!context) return;
             drawLine({ ctx: context, prevPoint: data.prevPoint, currPoint: data.currPoint, color: data.color })
-
-            // return () => {
-            //     socket.off("get-draw-line");
-            // };
         })
     }, [])
 
@@ -72,6 +89,11 @@ export default function Canvas() {
 
     }, [isDrawing]);
 
+    const emitClearCanvas = () => {
+        socket.emit("clear-canvas", null);
+        clearCanvas();
+    }
+
     const clearCanvas = () => {
         if (!canvasRef) return;
         const context = canvasRef.current?.getContext('2d');
@@ -88,7 +110,7 @@ export default function Canvas() {
         drawLine({ ctx, prevPoint, currPoint, color })
     }
 
-    const drawLine = ({ ctx, prevPoint, currPoint  , color}: DrawLine) => {
+    const drawLine = ({ ctx, prevPoint, currPoint, color }: DrawLine) => {
 
         const { x: currX, y: currY } = currPoint;
         const lineColor = color;
@@ -115,7 +137,7 @@ export default function Canvas() {
                     onChange={(e) => setColor(e.hex)}
                 />
                 <Button
-                    onClick={clearCanvas}
+                    onClick={emitClearCanvas}
                     variant={'destructive'}
                 >
                     Clear Canvas
