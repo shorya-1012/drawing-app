@@ -29,7 +29,7 @@ export default function Canvas() {
 
         socket.emit("client-connect", null);
 
-        socket.on("get-client-state", (data) => {
+        socket.on("get-client-state", () => {
             const client_state = canvasRef.current?.toDataURL();
             if (!client_state) return
             socket.emit("client-state", client_state);
@@ -43,7 +43,7 @@ export default function Canvas() {
             }
         })
 
-        socket.on("clear-canvas" , ()=>{
+        socket.on("clear-canvas", () => {
             clearCanvas();
         })
 
@@ -51,6 +51,13 @@ export default function Canvas() {
             if (!context) return;
             drawLine({ ctx: context, prevPoint: data.prevPoint, currPoint: data.currPoint, color: data.color })
         })
+
+        return () => {
+            socket.off("get-client-state");
+            socket.off("get-draw-line");
+            socket.off("clear-canvas");
+            socket.off("server-state");
+        }
     }, [])
 
     useEffect(() => {
