@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react"
 import { Button } from "../ui/button";
 import { ChromePicker } from 'react-color'
 import { io } from 'socket.io-client'
+import { useParams } from "react-router-dom";
 
-const socket = io('http://localhost:3000');
+const socket = io('http://localhost:3000/socket');
 
 type DrawLine = {
     ctx: CanvasRenderingContext2D,
@@ -18,6 +19,7 @@ type Point = {
 }
 
 export default function Canvas() {
+    const { roomid } = useParams();
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const prevPoint = useRef<Point | null>(null);
@@ -27,12 +29,18 @@ export default function Canvas() {
     useEffect(() => {
         const context = canvasRef.current?.getContext('2d');
 
-        socket.emit("client-connect", null);
+        socket.emit("client-connect", {
+            roomCode: roomid
+        });
 
         socket.on("get-client-state", () => {
+            console.log("recieve req for state")
             const client_state = canvasRef.current?.toDataURL();
             if (!client_state) return
-            socket.emit("client-state", client_state);
+            socket.emit("client-state", {
+                state: client_state,
+                roomCode: roomid
+            });
         })
 
         socket.on("server-state", (data) => {
@@ -97,7 +105,9 @@ export default function Canvas() {
     }, [isDrawing]);
 
     const emitClearCanvas = () => {
-        socket.emit("clear-canvas", null);
+        socket.emit("clear-canvas", {
+            roomCode: roomid
+        });
         clearCanvas();
     }
 
@@ -112,6 +122,7 @@ export default function Canvas() {
         socket.emit("draw-line", {
             prevPoint: prevPoint,
             currPoint,
+            roomCode: roomid,
             color
         })
         drawLine({ ctx, prevPoint, currPoint, color })

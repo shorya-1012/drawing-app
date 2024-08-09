@@ -6,10 +6,13 @@ import { Button } from "../components/ui/button"
 import { useEffect, useState } from "react"
 import { gsap, Expo } from 'gsap'
 import { Vortex } from "../components/ui/vortex"
+import { useNavigate } from "react-router-dom"
+import axios from "axios"
 
 export default function HomePage() {
 
     const [loadingCounter, setLoadingCounter] = useState(0);
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (loadingCounter == 100) {
@@ -26,7 +29,7 @@ export default function HomePage() {
 
     const introAnimation = () => {
         const t1 = gsap.timeline({
-            onComplete: () => console.log("compelete")
+            // onComplete: () => console.log("compelete")
         });
         t1.to("#follow", {
             width: "100%",
@@ -62,6 +65,12 @@ export default function HomePage() {
                 ease: Expo.easeInOut,
                 duration: 0.6
             })
+    }
+
+    const createRoomHandler = async () => {
+        const { data } = await axios.get("http://localhost:3000/create-room");
+        console.log(data);
+        navigate(`/draw/${data.roomCode}`)
     }
 
     return (
@@ -110,7 +119,11 @@ export default function HomePage() {
                             <Shapes />
                             Join
                         </Button>
-                        <Button variant={"secondary"} className="flex items-center gap-x-3 text-gray-950">
+                        <Button
+                            onClick={createRoomHandler}
+                            variant={"secondary"}
+                            className="flex items-center gap-x-3 text-gray-950"
+                        >
                             <CirclePlus />
                             Create
                         </Button>
