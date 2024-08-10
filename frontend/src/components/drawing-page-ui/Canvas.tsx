@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { Button } from "../ui/button";
-import { ChromePicker } from 'react-color'
+import { GradientPicker } from "../ui/colorPicker";
 import { io } from 'socket.io-client'
 import { useParams } from "react-router-dom";
 
@@ -150,10 +150,7 @@ export default function Canvas() {
     return (
         <div className="w-full h-full flex items-center gap-x-5 justify-center">
             <div className="flex flex-col items-center gap-y-2">
-                <ChromePicker
-                    color={color}
-                    onChange={(e) => setColor(e.hex)}
-                />
+                <GradientPicker background={color} setBackground={setColor} />
                 <Button
                     onClick={emitClearCanvas}
                     variant={'destructive'}

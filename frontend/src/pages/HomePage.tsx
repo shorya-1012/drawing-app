@@ -1,18 +1,14 @@
-import { Link } from "react-router-dom"
 import { SiExcalidraw } from 'react-icons/si'
-import { CirclePlus } from 'lucide-react'
 import { Shapes } from 'lucide-react'
 import { Button } from "../components/ui/button"
 import { useEffect, useState } from "react"
 import { gsap, Expo } from 'gsap'
 import { Vortex } from "../components/ui/vortex"
-import { useNavigate } from "react-router-dom"
-import axios from "axios"
+import { CreateRoomButton } from "../components/ui/createRoomButton"
 
 export default function HomePage() {
 
     const [loadingCounter, setLoadingCounter] = useState(0);
-    const navigate = useNavigate();
 
     useEffect(() => {
         if (loadingCounter == 100) {
@@ -67,14 +63,8 @@ export default function HomePage() {
             })
     }
 
-    const createRoomHandler = async () => {
-        const { data } = await axios.get("http://localhost:3000/create-room");
-        console.log(data);
-        navigate(`/draw/${data.roomCode}`)
-    }
-
     return (
-        <div className="h-screen w-screen relative">
+        <div className="h-screen w-screen relative font-spaceGrotesk">
             <div id="loading" className="h-full w-full bg-[#121212] flex justify-center items-center absolute top:0">
                 <div id="follow" className="absolute bg-red-500 h-[4px] w-[0] left-0 z-[2] flex justify-center items-center text-2xl text-red-500 overflow-hidden">
                     <div className="flex flex-col gap-y-1 items-center justify-center text-3xl">
@@ -119,14 +109,7 @@ export default function HomePage() {
                             <Shapes />
                             Join
                         </Button>
-                        <Button
-                            onClick={createRoomHandler}
-                            variant={"secondary"}
-                            className="flex items-center gap-x-3 text-gray-950"
-                        >
-                            <CirclePlus />
-                            Create
-                        </Button>
+                        <CreateRoomButton />
                     </div>
                 </Vortex>
             </div >

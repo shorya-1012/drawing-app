@@ -17,6 +17,11 @@ module.exports = {
             },
         },
         extend: {
+            fontFamily: {
+                spaceGrotesk: ['Space Grotesk', 'sans-serif'],
+                // You can keep Roboto or other fonts if you need
+                roboto: ['Roboto', 'sans-serif'],
+            },
             colors: {
                 border: "hsl(var(--border))",
                 input: "hsl(var(--input))",

@@ -1,7 +1,7 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Serialize)]
-pub struct CreateRoom {
+#[derive(Serialize , Deserialize)]
+pub struct RoomCode {
     #[serde(rename = "roomCode")]
     pub room_code: String,
 }

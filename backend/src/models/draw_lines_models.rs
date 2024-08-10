@@ -18,6 +18,11 @@ pub struct RoomData {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+pub struct UsernameData {
+    pub username: String,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
 pub struct ClientState {
     pub state: String,
     #[serde(rename = "roomCode")]
