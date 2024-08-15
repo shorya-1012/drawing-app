@@ -6,12 +6,7 @@ use crate::{
     },
     utils::helpers::{generate_session_id, generate_uuid},
 };
-use axum::{
-    extract::State,
-    http::{header::HeaderMap, StatusCode},
-    response::IntoResponse,
-    Json,
-};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use bcrypt::{hash, verify, DEFAULT_COST};
 use redis::Commands;
 use sqlx::{Error, Row};
@@ -170,32 +165,17 @@ pub async fn login_user_handler(
 
 pub async fn get_user_id_handler(
     State(state): State<AppState>,
-    // Json(session_data): Json<UserSessionIdData>,
-    headers: HeaderMap,
+    cookies: Cookies,
 ) -> Result<impl IntoResponse, impl IntoResponse> {
     let redis_client = &state.lock().await.redis;
 
-    // println!("{:#?}", headers);
-    let header_response = match headers.get("authorization") {
-        Some(val) => val,
+    let session_id = match cookies.get("session_id") {
+        Some(cookie) => cookie.value().to_string(),
         None => {
             return Err((
-                StatusCode::FORBIDDEN,
+                StatusCode::NOT_FOUND,
                 Json(ErrorJson {
-                    error: "Authorization Header not provided".to_string(),
-                }),
-            ));
-        }
-    };
-
-    let bearer: Vec<&str> = header_response.to_str().unwrap_or("").split(" ").collect();
-    let session_id = match bearer.get(1) {
-        Some(val) => val,
-        None => {
-            return Err((
-                StatusCode::FORBIDDEN,
-                Json(ErrorJson {
-                    error: "Session Id not provided".to_string(),
+                    error: "Sessions Id cookie not found".to_string(),
                 }),
             ));
         }

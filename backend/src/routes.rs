@@ -16,7 +16,7 @@ pub fn setup_routes(db_pool: AppState) -> Router {
         .route("/", get(greet))
         .route("/register", post(register_user_handler))
         .route("/login", post(login_user_handler))
-        .route("/get-user-id", post(get_user_id_handler))
+        .route("/get-user-id", get(get_user_id_handler))
         .route("/create-room", post(create_room_handler))
         .layer(CookieManagerLayer::new())
         .with_state(db_pool)
