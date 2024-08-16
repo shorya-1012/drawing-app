@@ -99,7 +99,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let listener = TcpListener::bind("127.0.0.1:3000")
         .await
         .expect("Unable to setup TCP Listener");
-
     let (layer, io) = SocketIo::new_layer();
     io.ns("/socket", on_connect);
 
