@@ -6,6 +6,10 @@ import { useParams } from "react-router-dom";
 
 const socket = io('http://localhost:3000/socket');
 
+// socket.on('disconnect', (reason) => {
+//     console.log(`disconnected from server: ${reason}`, null);
+// });
+
 type DrawLine = {
     ctx: CanvasRenderingContext2D,
     prevPoint: Point | null,
@@ -65,6 +69,7 @@ export default function Canvas() {
             socket.off("get-draw-line");
             socket.off("clear-canvas");
             socket.off("server-state");
+            socket.disconnect();
         }
     }, [])
 

@@ -5,6 +5,9 @@ mod utils;
 
 use std::{process::exit, sync::Arc};
 
+// use http::header::
+
+use axum::http::Method;
 use dotenv::dotenv;
 use models::{
     draw_lines_models::{ClientState, DrawLine, RoomData},
@@ -18,7 +21,7 @@ use socketioxide::{
 };
 use tokio::{net::TcpListener, sync::Mutex};
 use tower::ServiceBuilder;
-use tower_http::cors::CorsLayer;
+use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::FmtSubscriber;
 
 async fn on_connect(socket: SocketRef) {
@@ -105,9 +108,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         redis: redis_client,
     }));
 
+    let origin = ["http://localhost:5173".parse()?];
+
     let app = setup_routes(app_state).layer(
         ServiceBuilder::new()
-            .layer(CorsLayer::permissive())
+            .layer(
+                CorsLayer::new()
+                    .allow_origin(origin)
+                    .allow_methods([Method::GET, Method::POST])
+                    .allow_headers([http::header::CONTENT_TYPE, http::header::AUTHORIZATION])
+                    .allow_credentials(true),
+            )
             .layer(layer),
     );
 

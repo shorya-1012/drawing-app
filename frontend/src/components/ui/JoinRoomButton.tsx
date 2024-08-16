@@ -1,4 +1,4 @@
-import { CirclePlus, Copy } from 'lucide-react'
+import { Shapes, Clipboard } from 'lucide-react'
 import {
     Dialog,
     DialogContent,
@@ -10,33 +10,20 @@ import {
     DialogClose,
 } from './dialog'
 import { Input } from './input'
-import axios from "axios"
 import { Button, buttonVariants } from './button'
 import { cn } from '../../lib/utils'
 import { useState } from 'react'
 import { handleRedirect } from '../../lib/helpers'
 import { useNavigate } from 'react-router-dom'
 
-export const CreateRoomButton = () => {
+export const JoinRoomButton = () => {
     const [roomId, setRoomId] = useState("");
     const [username, setUsername] = useState("");
     const navigate = useNavigate();
 
-    const createRoomHandler = async () => {
-        try {
-            const { data } = await axios.post("http://localhost:3000/create-room", {
-                username: username
-            });
-            setRoomId(data.roomCode);
-        } catch (error) {
-            document.getElementById('close-button')?.click();
-            alert(error);
-        }
-    }
-
-    const handleCopy = (e: any) => {
+    const handlePaste = (e: any) => {
         e.preventDefault();
-        navigator.clipboard.writeText(roomId).then(() => console.log("Copied to clipboard"));
+        navigator.clipboard.readText().then((text) => setRoomId(text))
     }
 
     return (
@@ -44,8 +31,8 @@ export const CreateRoomButton = () => {
             <DialogTrigger
                 className={cn(buttonVariants({ variant: 'secondary' }), 'flex gap-x-2')}
             >
-                <CirclePlus />
-                Create
+                <Shapes />
+                Join
             </DialogTrigger>
             <DialogContent aria-describedby={"Room Form"} className="w-96 f font-spaceGrotesk">
                 <DialogHeader>
@@ -59,7 +46,7 @@ export const CreateRoomButton = () => {
                 <form className="space-y-6 w-full">
                     <div className="grid w-full items-center gap-1.5">
                         <label htmlFor="username">Username</label>
-                        <section className={cn("gap-2 w-full items-center cursor-pointer", `${!roomId ? "flex" : "hidden"}`)}>
+                        <section className={cn("gap-2 w-full items-center cursor-pointer")}>
                             <Input
                                 type="text"
                                 id="username"
@@ -72,22 +59,23 @@ export const CreateRoomButton = () => {
                             <DialogClose id='close-button'>
                             </DialogClose>
                         </section>
-                        <section className={cn("gap-2 w-full items-center cursor-pointer", `${roomId ? "flex" : "hidden"}`)}>
+                        <section className={cn("flex gap-2 w-full items-center cursor-pointer")}>
                             <Input
                                 type="text"
                                 id="roomId"
                                 autoComplete='off'
-                                readOnly
                                 className="w-72"
                                 value={roomId}
+                                placeholder='Enter room ID'
+                                onChange={(e) => setRoomId(e.target.value)}
                             />
                             <Button
                                 size="sm"
                                 className="px-3"
-                                onClick={handleCopy}
+                                onClick={handlePaste}
                             >
-                                <span className="sr-only">Copy</span>
-                                <Copy className="h-4 w-4" />
+                                <span className="sr-only">Paste</span>
+                                <Clipboard className="h-4 w-4" />
                             </Button>
                             <DialogClose id='close-button'>
                             </DialogClose>
@@ -95,11 +83,11 @@ export const CreateRoomButton = () => {
                     </div>
                 </form>
                 <DialogFooter className=''>
-                    {roomId ?
-                        <Button onClick={() => handleRedirect({ roomId, username, navigate })} className="ml-auto mt-3 px-3 py-5 border-[1px] rounded-xl">Join Room</Button>
-                        :
-                        <Button disabled={username.length < 3} onClick={createRoomHandler} className="ml-auto mt-3 px-3 py-5 border-[1px] rounded-xl">Create Room</Button>
-                    }
+                    <Button
+                        disabled={!roomId && !username}
+                        onClick={() => handleRedirect({ roomId, username, navigate })}
+                        className="ml-auto mt-3 px-3 py-5 border-[1px] rounded-xl">Join Room
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog >

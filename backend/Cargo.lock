@@ -149,6 +149,7 @@ dependencies = [
  "axum",
  "bcrypt",
  "dotenv",
+ "http",
  "rand",
  "redis",
  "serde",

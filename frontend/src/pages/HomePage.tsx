@@ -1,10 +1,9 @@
 import { SiExcalidraw } from 'react-icons/si'
-import { Shapes } from 'lucide-react'
-import { Button } from "../components/ui/button"
 import { useEffect, useState } from "react"
 import { gsap, Expo } from 'gsap'
 import { Vortex } from "../components/ui/vortex"
 import { CreateRoomButton } from "../components/ui/createRoomButton"
+import { JoinRoomButton } from '../components/ui/JoinRoomButton'
 
 export default function HomePage() {
 
@@ -105,10 +104,7 @@ export default function HomePage() {
                         Sketch, share, and collaborate on a live canvas with friends and colleagues.
                     </div>
                     <div className="title-line opacity-0 hidden gap-x-5 text-2xl">
-                        <Button variant={"secondary"} className="flex items-center gap-x-3 text-gray-950">
-                            <Shapes />
-                            Join
-                        </Button>
+                        <JoinRoomButton />
                         <CreateRoomButton />
                     </div>
                 </Vortex>

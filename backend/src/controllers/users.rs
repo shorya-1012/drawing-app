@@ -2,7 +2,7 @@ use crate::{
     models::{
         error_json::ErrorJson,
         state::AppState,
-        users::{UserData, UserIdData, UserLoginData, UserRegisterData, UserSessionIdData},
+        users::{UserData, UserIdData, UserLoginData, UserRegisterData},
     },
     utils::helpers::{generate_session_id, generate_uuid},
 };
@@ -144,7 +144,9 @@ pub async fn login_user_handler(
 
     let session_id = generate_session_id();
 
-    let cookie = Cookie::new("session_id", session_id.clone());
+    let mut cookie = Cookie::new("session_id", session_id.clone());
+    cookie.set_same_site(None);
+    cookie.set_secure(false);
     cookies.add(cookie);
 
     let _: () = match con.set(&session_id, user.userid) {
@@ -160,7 +162,7 @@ pub async fn login_user_handler(
         }
     };
 
-    Ok((StatusCode::OK, Json("User registered successfully")))
+    Ok((StatusCode::OK, Json("User LogIn successful")))
 }
 
 pub async fn get_user_id_handler(
