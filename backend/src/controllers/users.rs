@@ -5,6 +5,7 @@ use crate::{
         users::{UserData, UserIdData, UserLoginData, UserRegisterData, VerificationData},
     },
     utils::{
+        auth_helpers::get_user_id,
         emails::send_email,
         helpers::{generate_session_id, generate_uuid},
     },
@@ -181,53 +182,6 @@ pub async fn login_user_handler(
     Ok((StatusCode::OK, Json("User LogIn successful")))
 }
 
-pub async fn get_user_id_handler(
-    State(state): State<AppState>,
-    cookies: Cookies,
-) -> Result<impl IntoResponse, impl IntoResponse> {
-    let redis_client = &state.lock().await.redis;
-
-    let session_id = match cookies.get("session_id") {
-        Some(cookie) => cookie.value().to_string(),
-        None => {
-            return Err((
-                StatusCode::NOT_FOUND,
-                Json(ErrorJson {
-                    error: "Sessions Id cookie not found".to_string(),
-                }),
-            ));
-        }
-    };
-
-    let mut con = match redis_client.get_connection() {
-        Ok(client) => client,
-        Err(err) => {
-            println!("{:#?}", err);
-            return Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(ErrorJson {
-                    error: "Unable to form connection with redis client".to_string(),
-                }),
-            ));
-        }
-    };
-
-    let user_id: String = match con.get(session_id) {
-        Ok(client) => client,
-        Err(err) => {
-            println!("{:#?}", err);
-            return Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(ErrorJson {
-                    error: "Unable to get user session id".to_string(),
-                }),
-            ));
-        }
-    };
-
-    Ok((StatusCode::OK, Json(UserIdData { user_id })))
-}
-
 pub async fn verify_user_handler(
     State(state): State<AppState>,
     Json(payload): Json<VerificationData>,
@@ -282,6 +236,70 @@ pub async fn verify_user_handler(
     };
 
     Ok((StatusCode::OK, Json("User has been verified")))
+}
+
+pub async fn get_user_id_handler(
+    State(state): State<AppState>,
+    cookies: Cookies,
+) -> impl IntoResponse {
+    let redis_client = &state.lock().await.redis;
+
+    let res = get_user_id(redis_client, cookies).await;
+
+    if res.is_none() {
+        return "".to_string();
+    }
+
+    let user_id = res.unwrap();
+
+    user_id
+}
+
+pub async fn sign_out_handler(
+    State(state): State<AppState>,
+    cookies: Cookies,
+) -> Result<impl IntoResponse, impl IntoResponse> {
+    let redis_client = &state.lock().await.redis;
+
+    let session_id = match cookies.get("session_id") {
+        Some(cookie) => cookie.value().to_string(),
+        None => {
+            return Err((
+                StatusCode::NOT_FOUND,
+                Json(ErrorJson {
+                    error: "User is not logged in".to_string(),
+                }),
+            ))
+        }
+    };
+
+    let mut con = match redis_client.get_connection() {
+        Ok(client) => client,
+        Err(err) => {
+            println!("{:#?}", err);
+            return Err((
+                StatusCode::NOT_FOUND,
+                Json(ErrorJson {
+                    error: "Unable to connect to redis client".to_string(),
+                }),
+            ));
+        }
+    };
+
+    let _: String = match con.del(session_id) {
+        Ok(res) => res,
+        Err(err) => {
+            println!("{:#?}", err);
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ErrorJson {
+                    error: "Unable to delete session id".to_string(),
+                }),
+            ));
+        }
+    };
+
+    Ok(StatusCode::OK)
 }
 
 // pub async fn get_verification_email(

@@ -4,10 +4,14 @@ import { gsap, Expo } from 'gsap'
 import { Vortex } from "../components/ui/vortex"
 import { CreateRoomButton } from "../components/ui/createRoomButton"
 import { JoinRoomButton } from '../components/ui/JoinRoomButton'
+import { useAuth } from '../lib/AuthProvider'
+import { Link } from 'react-router-dom'
+import { SignOutButton } from '../components/ui/SignOutButton'
 
 export default function HomePage() {
 
     const [loadingCounter, setLoadingCounter] = useState(0);
+    const { userId } = useAuth();
 
     useEffect(() => {
         if (loadingCounter == 100) {
@@ -103,12 +107,23 @@ export default function HomePage() {
                     <div className="title-line opacity-0 hidden font-extralight text-base md:text-4xl dark:text-neutral-200 py-4 text-center">
                         Sketch, share, and collaborate on a live canvas with friends and colleagues.
                     </div>
-                    <div className="title-line opacity-0 hidden gap-x-5 text-2xl">
-                        <JoinRoomButton />
-                        <CreateRoomButton />
-                    </div>
+                    {
+                        userId ?
+
+                            <div className="title-line opacity-0 hidden gap-x-5 text-2xl">
+                                <JoinRoomButton />
+                                <CreateRoomButton />
+                                <SignOutButton />
+                            </div>
+                            :
+                            <div className="title-line opacity-0 hidden gap-x-5 text-2xl">
+                                <Link to={"/login"} className='rounded-xl py-3 px-5 bg-gray-100 text-gray-900 text-lg hover:bg-gray-300'>
+                                    Log In
+                                </Link>
+                            </div>
+                    }
                 </Vortex>
             </div >
-        </div>
+        </div >
     )
 }

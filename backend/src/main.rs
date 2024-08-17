@@ -5,8 +5,6 @@ mod utils;
 
 use std::{process::exit, sync::Arc};
 
-// use http::header::
-
 use axum::http::Method;
 use dotenv::dotenv;
 use models::{
