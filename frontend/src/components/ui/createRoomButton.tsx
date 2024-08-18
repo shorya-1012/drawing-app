@@ -16,17 +16,17 @@ import { cn } from '../../lib/utils'
 import { useState } from 'react'
 import { handleRedirect } from '../../lib/helpers'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../lib/AuthProvider'
 
 export const CreateRoomButton = () => {
     const [roomId, setRoomId] = useState("");
-    const [username, setUsername] = useState("");
     const navigate = useNavigate();
+    const { userId } = useAuth();
 
     const createRoomHandler = async () => {
         try {
-            const { data } = await axios.post("http://localhost:3000/create-room", {
-                username: username
-            });
+            if (!userId) throw new Error("You need to log in to create a room");
+            const { data } = await axios.post("http://localhost:3000/create-room");
             setRoomId(data.roomCode);
         } catch (error) {
             document.getElementById('close-button')?.click();
@@ -42,6 +42,7 @@ export const CreateRoomButton = () => {
     return (
         <Dialog>
             <DialogTrigger
+                onClick={() => createRoomHandler()}
                 className={cn(buttonVariants({ variant: 'secondary' }), 'flex gap-x-2')}
             >
                 <CirclePlus />
@@ -50,29 +51,15 @@ export const CreateRoomButton = () => {
             <DialogContent aria-describedby={"Room Form"} className="w-96 f font-spaceGrotesk">
                 <DialogHeader>
                     <DialogTitle className="flex items-center">
-                        {roomId ? "Join Room" : "Create Room"}
+                        Room Created
                     </DialogTitle>
                     <DialogDescription className="w-full flex items-center justify-start">
-                        {roomId ? "Share this room Id with others to let them join" : "Generate a room Id to share with friends"}
+                        Share this room Id with others to let them join
                     </DialogDescription>
                 </DialogHeader>
                 <form className="space-y-6 w-full">
                     <div className="grid w-full items-center gap-1.5">
-                        <label htmlFor="username">Username</label>
-                        <section className={cn("gap-2 w-full items-center cursor-pointer", `${!roomId ? "flex" : "hidden"}`)}>
-                            <Input
-                                type="text"
-                                id="username"
-                                autoComplete='off'
-                                className="w-full"
-                                value={username}
-                                placeholder='Enter your username'
-                                onChange={e => setUsername(e.target.value)}
-                            />
-                            <DialogClose id='close-button'>
-                            </DialogClose>
-                        </section>
-                        <section className={cn("gap-2 w-full items-center cursor-pointer", `${roomId ? "flex" : "hidden"}`)}>
+                        <section className={cn("gap-2 w-full items-center cursor-pointer", `flex`)}>
                             <Input
                                 type="text"
                                 id="roomId"
@@ -95,11 +82,7 @@ export const CreateRoomButton = () => {
                     </div>
                 </form>
                 <DialogFooter className=''>
-                    {roomId ?
-                        <Button onClick={() => handleRedirect({ roomId, username, navigate })} className="ml-auto mt-3 px-3 py-5 border-[1px] rounded-xl">Join Room</Button>
-                        :
-                        <Button disabled={username.length < 3} onClick={createRoomHandler} className="ml-auto mt-3 px-3 py-5 border-[1px] rounded-xl">Create Room</Button>
-                    }
+                    <Button onClick={() => handleRedirect({ roomId, navigate })} className="ml-auto mt-3 px-3 py-5 border-[1px] rounded-xl">Join Room</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog >

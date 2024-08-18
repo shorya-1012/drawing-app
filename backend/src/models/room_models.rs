@@ -10,5 +10,4 @@ pub struct RoomCode {
 pub struct JoinRoomData {
     #[serde(rename = "roomCode")]
     pub room_code: String,
-    pub username: String,
 }

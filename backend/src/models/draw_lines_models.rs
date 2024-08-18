@@ -15,6 +15,13 @@ pub struct DrawLine {
 pub struct RoomData {
     #[serde(rename = "roomCode")]
     pub room_code: String,
+    pub user_id: String,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct RoomDataResponse {
+    #[serde(rename = "roomCode")]
+    pub room_code: String,
 }
 
 #[derive(Deserialize, Serialize, Debug)]

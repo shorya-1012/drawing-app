@@ -3,6 +3,7 @@ import { Button } from "../ui/button";
 import { GradientPicker } from "../ui/colorPicker";
 import { io } from 'socket.io-client'
 import { useParams } from "react-router-dom";
+import { useAuth } from "../../lib/AuthProvider";
 
 const socket = io('http://localhost:3000/socket');
 
@@ -29,12 +30,14 @@ export default function Canvas() {
     const prevPoint = useRef<Point | null>(null);
     const [color, setColor] = useState("#000");
     const [isDrawing, setIsDrawing] = useState(false);
+    const { userId } = useAuth();
 
     useEffect(() => {
         const context = canvasRef.current?.getContext('2d');
 
         socket.emit("client-connect", {
-            roomCode: roomid
+            roomCode: roomid,
+            user_id: userId!
         });
 
         socket.on("get-client-state", () => {
@@ -111,7 +114,8 @@ export default function Canvas() {
 
     const emitClearCanvas = () => {
         socket.emit("clear-canvas", {
-            roomCode: roomid
+            roomCode: roomid,
+            user_id: userId
         });
         clearCanvas();
     }

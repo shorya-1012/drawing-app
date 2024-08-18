@@ -1,6 +1,6 @@
 use crate::{
     controllers::{
-        room_controllers::{create_room_handler, join_room},
+        room_controllers::{check_room, create_room_handler},
         users::{
             get_user_id_handler, login_user_handler, register_user_handler, sign_out_handler,
             verify_user_handler,
@@ -23,6 +23,7 @@ pub fn setup_routes(db_pool: AppState) -> Router {
         .route("/sign-out", post(sign_out_handler))
         .route("/get-user-id", get(get_user_id_handler))
         .route("/create-room", post(create_room_handler))
+        .route("/check-room", post(check_room))
         .layer(CookieManagerLayer::new())
         .with_state(db_pool)
 }

@@ -18,7 +18,6 @@ import { useNavigate } from 'react-router-dom'
 
 export const JoinRoomButton = () => {
     const [roomId, setRoomId] = useState("");
-    const [username, setUsername] = useState("");
     const navigate = useNavigate();
 
     const handlePaste = (e: any) => {
@@ -37,28 +36,15 @@ export const JoinRoomButton = () => {
             <DialogContent aria-describedby={"Room Form"} className="w-96 f font-spaceGrotesk">
                 <DialogHeader>
                     <DialogTitle className="flex items-center">
-                        {roomId ? "Join Room" : "Create Room"}
+                        Join Room
                     </DialogTitle>
                     <DialogDescription className="w-full flex items-center justify-start">
-                        {roomId ? "Share this room Id with others to let them join" : "Generate a room Id to share with friends"}
+                    Enter A room Id to join
                     </DialogDescription>
                 </DialogHeader>
                 <form className="space-y-6 w-full">
                     <div className="grid w-full items-center gap-1.5">
-                        <label htmlFor="username">Username</label>
-                        <section className={cn("gap-2 w-full items-center cursor-pointer")}>
-                            <Input
-                                type="text"
-                                id="username"
-                                autoComplete='off'
-                                className="w-full"
-                                value={username}
-                                placeholder='Enter your username'
-                                onChange={e => setUsername(e.target.value)}
-                            />
-                            <DialogClose id='close-button'>
-                            </DialogClose>
-                        </section>
+                        <label htmlFor="roomId">Room Id</label>
                         <section className={cn("flex gap-2 w-full items-center cursor-pointer")}>
                             <Input
                                 type="text"
@@ -84,8 +70,8 @@ export const JoinRoomButton = () => {
                 </form>
                 <DialogFooter className=''>
                     <Button
-                        disabled={!roomId && !username}
-                        onClick={() => handleRedirect({ roomId, username, navigate })}
+                        disabled={!roomId}
+                        onClick={() => handleRedirect({ roomId, navigate })}
                         className="ml-auto mt-3 px-3 py-5 border-[1px] rounded-xl">Join Room
                     </Button>
                 </DialogFooter>

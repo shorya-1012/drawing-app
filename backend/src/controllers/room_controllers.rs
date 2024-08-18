@@ -1,13 +1,17 @@
-use crate::models::{
-    draw_lines_models::{RoomData, UsernameData},
-    error_json::ErrorJson,
-    room_models::JoinRoomData,
-    state::AppState,
+use crate::{
+    models::{
+        draw_lines_models::{RoomData, RoomDataResponse, UsernameData},
+        error_json::ErrorJson,
+        room_models::JoinRoomData,
+        state::AppState,
+    },
+    utils::auth_helpers::get_user_id,
 };
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 
 use rand::{distributions::Alphanumeric, Rng};
 use sqlx::{Error, Row};
+use tower_cookies::Cookies;
 
 fn generate_room_id() -> String {
     let id: String = rand::thread_rng()
@@ -20,22 +24,14 @@ fn generate_room_id() -> String {
 
 pub async fn create_room_handler(
     State(state): State<AppState>,
-    Json(payload): Json<UsernameData>,
 ) -> Result<impl IntoResponse, impl IntoResponse> {
     let db_pool = &state.lock().await.db;
 
     let room_id = generate_room_id();
-    let members: Vec<String> = Vec::new();
 
-    let query = "INSERT INTO rooms (room_id , admin, members) VALUES ($1 , $2 , $3)";
+    let query = "INSERT INTO rooms (roomid) VALUES ($1)";
 
-    match sqlx::query(query)
-        .bind(&room_id)
-        .bind(&payload.username)
-        .bind(&members)
-        .execute(db_pool)
-        .await
-    {
+    match sqlx::query(query).bind(&room_id).execute(db_pool).await {
         Ok(_) => println!("Created"),
         Err(err) => {
             println!("{:#?}", err);
@@ -48,75 +44,45 @@ pub async fn create_room_handler(
         }
     };
 
-    let response = RoomData { room_code: room_id };
+    let response = RoomDataResponse { room_code: room_id };
 
     Ok((StatusCode::CREATED, Json(response)))
 }
 
-pub async fn join_room(
+pub async fn check_room(
     State(state): State<AppState>,
     Json(payload): Json<JoinRoomData>,
 ) -> Result<impl IntoResponse, impl IntoResponse> {
-    let db_pool = &state.lock().await.db;
+    let state = &state.lock().await;
+    let db_pool = &state.db;
 
-    let query = "SELECT members from rooms where room_id = $1";
+    let query = "SELECT COUNT(*) FROM rooms where roomid = $1";
 
-    let record = match sqlx::query(query)
+    let exists: (i64,) = match sqlx::query_as(query)
         .bind(&payload.room_code)
         .fetch_one(db_pool)
         .await
     {
-        Ok(value) => value,
-        Err(Error::RowNotFound) => {
-            return Err((
-                StatusCode::NOT_FOUND,
-                Json(ErrorJson {
-                    error: "Room not found".to_string(),
-                }),
-            ));
-        }
-        Err(err) => {
-            println!("{:?}", err);
-            return Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(ErrorJson {
-                    error: "Database error".to_string(),
-                }),
-            ));
-        }
-    };
-
-    let members: Vec<String> = record.get("members");
-
-    // join the room , i.e, add the user to the members list
-    if members.contains(&payload.username) {
-        return Err((
-            StatusCode::CONFLICT,
-            Json(ErrorJson {
-                error: "User with username already exists in room".to_string(),
-            }),
-        ));
-    }
-
-    let append_query = "update rooms set members = array_append(members , $1) where room_id = $2";
-
-    match sqlx::query(append_query)
-        .bind(&payload.username)
-        .bind(&payload.room_code)
-        .execute(db_pool)
-        .await
-    {
-        Ok(_) => println!("Joined Room in db"),
+        Ok(val) => val,
         Err(err) => {
             println!("{:#?}", err);
             return Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ErrorJson {
-                    error: "Unable to join room in database".to_string(),
+                    error: "Unable to find room".to_string(),
                 }),
             ));
         }
     };
+
+    if exists.0 == 0 {
+        return Err((
+            StatusCode::NOT_FOUND,
+            Json(ErrorJson {
+                error: "Room does not exist".to_string(),
+            }),
+        ));
+    }
 
     Ok((StatusCode::OK, Json("Room joined successfully")))
 }
